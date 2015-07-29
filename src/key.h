@@ -132,7 +132,7 @@ public:
 
     // Get the 256-bit hash of this public key.
     uint256 GetHash() const {
-        return Hash(vch, vch+size());
+        return HashShabal(vch, vch+size());
     }
 
     // Check syntactic correctness.
@@ -154,24 +154,35 @@ public:
     // If this public key is not fully valid, the return value will be false.
     bool Verify(const uint256 &hash, const std::vector<unsigned char>& vchSig) const;
 
+    bool Recover(const uint256 &hash, const std::vector<unsigned char>& vchSig);
+
     // Verify a compact signature (~65 bytes).
     // See CKey::SignCompact.
-    bool VerifyCompact(const uint256 &hash, const std::vector<unsigned char>& vchSig) const;
+    //bool VerifyCompact(const uint256 &hash, const std::vector<unsigned char>& vchSig) const;
 
     // Recover a public key from a compact signature.
-    bool RecoverCompact(const uint256 &hash, const std::vector<unsigned char>& vchSig);
+    //bool RecoverCompact(const uint256 &hash, const std::vector<unsigned char>& vchSig);
 
     // Turn this public key into an uncompressed public key.
     bool Decompress();
 
     // Derive BIP32 child pubkey.
     bool Derive(CPubKey& pubkeyChild, unsigned char ccChild[32], unsigned int nChild, const unsigned char cc[32]) const;
+
+    // Raw for stealth address
+    std::vector<unsigned char> Raw() const {
+	std::vector<unsigned char> r;
+        r.insert(r.end(), vch, vch+size());
+	return r;
+    }
 };
 
 
 // secure_allocator is defined in allocators.h
 // CPrivKey is a serialized private key, with all parameters included (279 bytes)
 typedef std::vector<unsigned char, secure_allocator<unsigned char> > CPrivKey;
+// CSecret is a serialization of just the secret parameter (32 bytes)
+typedef std::vector<unsigned char, secure_allocator<unsigned char> > CSecret;
 
 /** An encapsulated private key. */
 class CKey {
@@ -260,7 +271,7 @@ public:
     // The header byte: 0x1B = first key with even y, 0x1C = first key with odd y,
     //                  0x1D = second key with even y, 0x1E = second key with odd y,
     //                  add 0x04 for compressed keys.
-    bool SignCompact(const uint256 &hash, std::vector<unsigned char>& vchSig) const;
+    //bool SignCompact(const uint256 &hash, std::vector<unsigned char>& vchSig) const;
 
     // Derive BIP32 child key.
     bool Derive(CKey& keyChild, unsigned char ccChild[32], unsigned int nChild, const unsigned char cc[32]) const;
@@ -315,3 +326,4 @@ struct CExtKey {
 bool ECC_InitSanityCheck(void);
 
 #endif
+

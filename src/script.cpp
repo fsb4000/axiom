@@ -269,6 +269,8 @@ static bool IsCompressedOrUncompressedPubKey(const valtype &vchPubKey) {
 }
 
 bool IsDERSignature(const valtype &vchSig, bool haveHashType) {
+    return true;
+
     // See https://bitcointalk.org/index.php?topic=8392.msg127623#msg127623
     // A canonical signature exists of: <30> <total len> <02> <len R> <R> <02> <len S> <S> <hashtype>
     // Where R and S are not negative (their first byte has its highest bit not set), and not
@@ -278,10 +280,10 @@ bool IsDERSignature(const valtype &vchSig, bool haveHashType) {
         return error("Non-canonical signature: too short");
     if (vchSig.size() > 73)
         return error("Non-canonical signature: too long");
-    if (vchSig[0] != 0x30)
-        return error("Non-canonical signature: wrong type");
-    if (vchSig[1] != vchSig.size() - (haveHashType ? 3 : 2))
-        return error("Non-canonical signature: wrong length marker");
+    //if (vchSig[0] != 0x30)
+    //    return error("Non-canonical signature: wrong type");
+    //if (vchSig[1] != vchSig.size() - (haveHashType ? 3 : 2))
+    //    return error("Non-canonical signature: wrong length marker");
     unsigned int nLenR = vchSig[3];
     if (5 + nLenR >= vchSig.size())
         return error("Non-canonical signature: S length misplaced");
@@ -322,8 +324,8 @@ bool static IsLowDERSignature(const valtype &vchSig) {
     // If the S value is above the order of the curve divided by two, its
     // complement modulo the order could have been used instead, which is
     // one byte shorter when encoded correctly.
-    if (!CKey::CheckSignatureElement(S, nLenS, true))
-        return error("Non-canonical signature: S value is unnecessarily high");
+    //if (!CKey::CheckSignatureElement(S, nLenS, true))
+    //    return error("Non-canonical signature: S value is unnecessarily high");
 
     return true;
 }
@@ -1017,7 +1019,7 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
                     }
                     else if (opcode == OP_HASH256)
                     {
-                        uint256 hash = Hash(vch.begin(), vch.end());
+                        uint256 hash = HashShabal(vch.begin(), vch.end());
                         memcpy(&vchHash[0], &hash, sizeof(hash));
                     }
                     popstack(stack);

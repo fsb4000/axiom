@@ -22,7 +22,7 @@ using namespace std;
 using namespace boost;
 
 #if defined(NDEBUG)
-# error "BlackCoin cannot be compiled without assertions."
+# error "Axiom cannot be compiled without assertions."
 #endif
 
 //
@@ -39,13 +39,13 @@ CTxMemPool mempool;
 map<uint256, CBlockIndex*> mapBlockIndex;
 set<pair<COutPoint, unsigned int> > setStakeSeen;
 
-CBigNum bnProofOfStakeLimit(~uint256(0) >> 20);
-CBigNum bnProofOfStakeLimitV2(~uint256(0) >> 48);
+CBigNum bnProofOfStakeLimit(~uint256(0) >> 2);
+CBigNum bnProofOfStakeLimitV2(~uint256(0) >> 2);
 
-unsigned int nStakeMinAge = 8 * 60 * 60; // 8 hours
-unsigned int nModifierInterval = 10 * 60; // time to elapse before new modifier is computed
+unsigned int nStakeMinAge = 4 * 60 * 60; // 4 hours
+unsigned int nModifierInterval = 5 * 60; // time to elapse before new modifier is computed
 
-int nCoinbaseMaturity = 500;
+int nCoinbaseMaturity = 30;
 CBlockIndex* pindexGenesisBlock = NULL;
 int nBestHeight = -1;
 
@@ -75,7 +75,7 @@ map<uint256, set<uint256> > mapOrphanTransactionsByPrev;
 // Constant stuff for coinbase transactions we create:
 CScript COINBASE_FLAGS;
 
-const string strMessageMagic = "BlackCoin Signed Message:\n";
+const string strMessageMagic = "Axiom Signed Message:\n";
 
 extern enum Checkpoints::CPMode CheckpointsMode;
 
@@ -268,7 +268,7 @@ bool CTransaction::ReadFromDisk(COutPoint prevout)
 
 bool IsStandardTx(const CTransaction& tx, string& reason)
 {
-    if (tx.nVersion > CTransaction::CURRENT_VERSION || tx.nVersion < 1) {
+    if (tx.nVersion > CTransaction::CURRENT_VERSION) {
         reason = "version";
         return false;
     }
@@ -967,9 +967,78 @@ static CBigNum GetProofOfStakeLimit(int nHeight)
 }
 
 // miner's coin base reward
-int64_t GetProofOfWorkReward(int64_t nFees)
+int64_t GetProofOfWorkReward(int64_t nFees, int nHeight)
 {
-    int64_t nSubsidy = 10000 * COIN;
+    int64_t nSubsidy = 5 * COIN;
+
+    if(nHeight <= 800)
+    {
+	nSubsidy = 500 * COIN;
+    }
+    else if(nHeight <= 1440)
+    {
+	nSubsidy = 200 * COIN;
+    }
+    else if(nHeight <= 5040)
+    {
+	nSubsidy = 100 * COIN;
+    }
+    else if(nHeight <= 9360)
+    {
+	nSubsidy = 50 * COIN;
+    }
+    else if(nHeight <= 13680)
+    {
+	nSubsidy = 25 * COIN;
+    }
+    else if(nHeight <= 18000)
+    {
+	nSubsidy = 10 * COIN;
+    }
+    else if(nHeight <= 156240)
+    {
+	nSubsidy = 5 * COIN;
+    }
+    else if(nHeight <= 160560)
+    {
+	nSubsidy = 10 * COIN;
+    }
+    else if(nHeight <= 164880)
+    {
+	nSubsidy = 50 * COIN;
+    }
+    else if(nHeight <= 169200)
+    {
+	nSubsidy = 100 * COIN;
+    }
+    else if(nHeight <= 173520)
+    {
+	nSubsidy = 50 * COIN;
+    }
+    else if(nHeight <= 177840)
+    {
+	nSubsidy = 25 * COIN;
+    }
+    else if(nHeight <= 182160)
+    {
+	nSubsidy = 10 * COIN;
+    }
+    else if(nHeight <= 707760)
+    {
+	nSubsidy = 5 * COIN;
+    }
+    else if(nHeight <= 1233360)
+    {
+	nSubsidy = 2.5 * COIN;
+    }
+    else if(nHeight <= 1758960)
+    {
+	nSubsidy = 1.25 * COIN;
+    }
+    else
+    {
+	nSubsidy = 1 * COIN;
+    }
 
     LogPrint("creation", "GetProofOfWorkReward() : create=%s nSubsidy=%d\n", FormatMoney(nSubsidy), nSubsidy);
 
@@ -977,16 +1046,85 @@ int64_t GetProofOfWorkReward(int64_t nFees)
 }
 
 // miner's coin stake reward based on coin age spent (coin-days)
-int64_t GetProofOfStakeReward(int64_t nCoinAge, int64_t nFees)
+int64_t GetProofOfStakeReward(int64_t nCoinAge, int64_t nFees, int nHeight)
 {
-    int64_t nSubsidy = nCoinAge * COIN_YEAR_REWARD * 33 / (365 * 33 + 8);
+    int64_t nSubsidy = 5 * COIN;
+
+    if(nHeight <= 800)
+    {
+	nSubsidy = 200 * COIN;
+    }
+    else if(nHeight <= 1440)
+    {
+	nSubsidy = 200 * COIN;
+    }
+    else if(nHeight <= 5040)
+    {
+	nSubsidy = 100 * COIN;
+    }
+    else if(nHeight <= 9360)
+    {
+	nSubsidy = 75 * COIN;
+    }
+    else if(nHeight <= 13680)
+    {
+	nSubsidy = 60 * COIN;
+    }
+    else if(nHeight <= 18000)
+    {
+	nSubsidy = 50 * COIN;
+    }
+    else if(nHeight <= 156240)
+    {
+	nSubsidy = 5 * COIN;
+    }
+    else if(nHeight <= 160560)
+    {
+	nSubsidy = 80 * COIN;
+    }
+    else if(nHeight <= 164880)
+    {
+	nSubsidy = 200 * COIN;
+    }
+    else if(nHeight <= 169200)
+    {
+	nSubsidy = 110 * COIN;
+    }
+    else if(nHeight <= 173520)
+    {
+	nSubsidy = 60 * COIN;
+    }
+    else if(nHeight <= 177840)
+    {
+	nSubsidy = 40 * COIN;
+    }
+    else if(nHeight <= 182160)
+    {
+	nSubsidy = 20 * COIN;
+    }
+    else if(nHeight <= 707760)
+    {
+	nSubsidy = 5 * COIN;
+    }
+    else if(nHeight <= 1233360)
+    {
+	nSubsidy = 2.5 * COIN;
+    }
+    else if(nHeight <= 1758960)
+    {
+	nSubsidy = 1.25 * COIN;
+    }
+    else
+    {
+	nSubsidy = 1 * COIN;
+    }
 
     LogPrint("creation", "GetProofOfStakeReward(): create=%s nCoinAge=%d\n", FormatMoney(nSubsidy), nCoinAge);
 
     return nSubsidy + nFees;
 }
 
-static const int64_t nTargetTimespan = 16 * 60;  // 16 mins
+static const int64_t nTargetTimespan = 52 * 60;  // 52 mins
 
 // ppcoin: find last block index up to pindex
 const CBlockIndex* GetLastBlockIndex(const CBlockIndex* pindex, bool fProofOfStake)
@@ -1463,7 +1601,7 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex, bool fJustCheck)
 
     if (IsProofOfWork())
     {
-        int64_t nReward = GetProofOfWorkReward(nFees);
+        int64_t nReward = GetProofOfWorkReward(nFees, pindex->nHeight);
         // Check coinbase reward
         if (vtx[0].GetValueOut() > nReward)
             return DoS(50, error("ConnectBlock() : coinbase reward exceeded (actual=%d vs calculated=%d)",
@@ -1477,7 +1615,7 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex, bool fJustCheck)
         if (!vtx[1].GetCoinAge(txdb, nCoinAge))
             return error("ConnectBlock() : %s unable to get coin age for coinstake", vtx[1].GetHash().ToString());
 
-        int64_t nCalculatedStakeReward = GetProofOfStakeReward(nCoinAge, nFees);
+        int64_t nCalculatedStakeReward = GetProofOfStakeReward(nCoinAge, nFees, pindex->nHeight);
 
         if (nStakeReward > nCalculatedStakeReward)
             return DoS(100, error("ConnectBlock() : coinstake pays too much(actual=%d vs calculated=%d)", nStakeReward, nCalculatedStakeReward));
@@ -1978,9 +2116,6 @@ bool CBlock::AcceptBlock()
         return DoS(100, error("AcceptBlock() : reject too old nVersion = %d", nVersion));
     else if (!IsProtocolV2(nHeight) && nVersion > 6)
         return DoS(100, error("AcceptBlock() : reject too new nVersion = %d", nVersion));
-
-    if (IsProofOfWork() && nHeight > Params().LastPOWBlock())
-        return DoS(100, error("AcceptBlock() : reject proof-of-work at height %d", nHeight));
 
     // Check coinbase timestamp
     if (GetBlockTime() > FutureDrift((int64_t)vtx[0].nTime, nHeight))
@@ -2592,7 +2727,7 @@ struct CImportingNow
 
 void ThreadImport(std::vector<boost::filesystem::path> vImportFiles)
 {
-    RenameThread("blackcoin-loadblk");
+    RenameThread("axiom-loadblk");
 
     CImportingNow imp;
 
@@ -2983,7 +3118,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                         hashSalt = GetRandHash();
                     uint64_t hashAddr = addr.GetHash();
                     uint256 hashRand = hashSalt ^ (hashAddr<<32) ^ ((GetTime()+hashAddr)/(24*60*60));
-                    hashRand = Hash(BEGIN(hashRand), END(hashRand));
+                    hashRand = HashShabal(BEGIN(hashRand), END(hashRand));
                     multimap<uint256, CNode*> mapMix;
                     BOOST_FOREACH(CNode* pnode, vNodes)
                     {
@@ -2992,7 +3127,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                         unsigned int nPointer;
                         memcpy(&nPointer, &pnode, sizeof(nPointer));
                         uint256 hashKey = hashRand ^ nPointer;
-                        hashKey = Hash(BEGIN(hashKey), END(hashKey));
+                        hashKey = HashShabal(BEGIN(hashKey), END(hashKey));
                         mapMix.insert(make_pair(hashKey, pnode));
                     }
                     int nRelayNodes = fReachable ? 2 : 1; // limited relaying of addresses outside our network(s)
@@ -3482,7 +3617,7 @@ bool ProcessMessages(CNode* pfrom)
 
         // Checksum
         CDataStream& vRecv = msg.vRecv;
-        uint256 hash = Hash(vRecv.begin(), vRecv.begin() + nMessageSize);
+        uint256 hash = HashShabal(vRecv.begin(), vRecv.begin() + nMessageSize);
         unsigned int nChecksum = 0;
         memcpy(&nChecksum, &hash, sizeof(nChecksum));
         if (nChecksum != hdr.nChecksum)

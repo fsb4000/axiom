@@ -1,10 +1,17 @@
 TEMPLATE = app
-TARGET = blackcoin-qt
-VERSION = 1.1.2.1
+TARGET = axiom-qt
+VERSION = 1.0.0.0
 INCLUDEPATH += src src/json src/qt
 QT += network
 DEFINES += ENABLE_WALLET
-DEFINES += BOOST_THREAD_USE_LIB BOOST_SPIRIT_THREADSAFE
+DEFINES += BOOST_THREAD_USE_LIB BOOST_SPIRIT_THREADSAFE 
+
+DEFINES += USE_NUM_NONE USE_FIELD_INV_BUILTIN USE_SCALAR_INV_BUILTIN
+# 64-bit
+#DEFINES += USE_FIELD_5X52 USE_SCALAR_4X64
+# 32-bit
+DEFINES += USE_FIELD_10X26 USE_SCALAR_8X32
+
 CONFIG += no_include_pwd
 CONFIG += thread
 
@@ -226,7 +233,47 @@ HEADERS += src/qt/bitcoingui.h \
     src/netbase.h \
     src/clientversion.h \
     src/threadsafety.h \
-    src/tinyformat.h
+    src/tinyformat.h \
+    src/secp256k1/include/secp256k1.h \
+    src/secp256k1/src/bench.h \
+    src/secp256k1/src/ecdsa.h \
+    src/secp256k1/src/ecdsa_impl.h \
+    src/secp256k1/src/eckey.h \
+    src/secp256k1/src/eckey_impl.h \
+    src/secp256k1/src/ecmult_gen.h \
+    src/secp256k1/src/ecmult_gen_impl.h \
+    src/secp256k1/src/ecmult.h \
+    src/secp256k1/src/ecmult_impl.h \
+    src/secp256k1/src/field_10x26.h \
+    src/secp256k1/src/field_10x26_impl.h \
+    src/secp256k1/src/field_5x52_asm_impl.h \
+    src/secp256k1/src/field_5x52.h \
+    src/secp256k1/src/field_5x52_impl.h \
+    src/secp256k1/src/field_5x52_int128_impl.h \
+    src/secp256k1/src/field.h \
+    src/secp256k1/src/field_impl.h \
+    src/secp256k1/src/group.h \
+    src/secp256k1/src/group_impl.h \
+    src/secp256k1/src/hash.h \
+    src/secp256k1/src/hash_impl.h \
+    src/secp256k1/src/num_gmp.h \
+    src/secp256k1/src/num_gmp_impl.h \
+    src/secp256k1/src/num.h \
+    src/secp256k1/src/num_impl.h \
+    src/secp256k1/src/scalar_4x64.h \
+    src/secp256k1/src/scalar_4x64_impl.h \
+    src/secp256k1/src/scalar_8x32.h \
+    src/secp256k1/src/scalar_8x32_impl.h \
+    src/secp256k1/src/scalar.h \
+    src/secp256k1/src/scalar_impl.h \
+    src/secp256k1/src/schnorr.h \
+    src/secp256k1/src/schnorr_impl.h \
+    src/secp256k1/src/testrand.h \
+    src/secp256k1/src/testrand_impl.h \
+    src/secp256k1/src/util.h \
+    src/sph_shabal.h \
+    src/sph_types.h
+    
 
 SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/qt/transactiontablemodel.cpp \
@@ -303,7 +350,9 @@ SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/scrypt-x86.S \
     src/scrypt-x86_64.S \
     src/scrypt.cpp \
-    src/pbkdf2.cpp
+    src/pbkdf2.cpp \
+    src/secp256k1/src/secp256k1.c \
+    src/shabal.c
 
 RESOURCES += \
     src/qt/bitcoin.qrc
@@ -401,7 +450,7 @@ macx:OBJECTIVE_SOURCES += src/qt/macdockiconhandler.mm
 macx:LIBS += -framework Foundation -framework ApplicationServices -framework AppKit
 macx:DEFINES += MAC_OSX MSG_NOSIGNAL=0
 macx:ICON = src/qt/res/icons/bitcoin.icns
-macx:TARGET = "BlackCoin-Qt"
+macx:TARGET = "Axiom-Qt"
 macx:QMAKE_CFLAGS_THREAD += -pthread
 macx:QMAKE_LFLAGS_THREAD += -pthread
 macx:QMAKE_CXXFLAGS_THREAD += -pthread

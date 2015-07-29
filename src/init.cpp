@@ -15,6 +15,7 @@
 #ifdef ENABLE_WALLET
 #include "wallet.h"
 #include "walletdb.h"
+#include "miner.h"
 #endif
 
 #include <boost/filesystem.hpp>
@@ -92,13 +93,14 @@ void Shutdown()
     TRY_LOCK(cs_Shutdown, lockShutdown);
     if (!lockShutdown) return;
 
-    RenameThread("blackcoin-shutoff");
+    RenameThread("axiom-shutoff");
     mempool.AddTransactionsUpdated(1);
     StopRPCThreads();
 #ifdef ENABLE_WALLET
     ShutdownRPCMining();
     if (pwalletMain)
         bitdb.Flush(false);
+    GenerateBitcoins(false, NULL, 0);
 #endif
     StopNode();
     {
@@ -163,8 +165,9 @@ std::string HelpMessage()
 {
     string strUsage = _("Options:") + "\n";
     strUsage += "  -?                     " + _("This help message") + "\n";
-    strUsage += "  -conf=<file>           " + _("Specify configuration file (default: blackcoin.conf)") + "\n";
-    strUsage += "  -pid=<file>            " + _("Specify pid file (default: blackcoind.pid)") + "\n";
+    strUsage += " -gen " + _("Generate coins (default: 0)") + "\n";
+    strUsage += "  -conf=<file>           " + _("Specify configuration file (default: axiom.conf)") + "\n";
+    strUsage += "  -pid=<file>            " + _("Specify pid file (default: axiomd.pid)") + "\n";
     strUsage += "  -datadir=<dir>         " + _("Specify data directory") + "\n";
     strUsage += "  -wallet=<dir>          " + _("Specify wallet file (within data directory)") + "\n";
     strUsage += "  -dbcache=<n>           " + _("Set database cache size in megabytes (default: 25)") + "\n";
@@ -456,7 +459,7 @@ bool AppInit2(boost::thread_group& threadGroup)
 
     // Sanity check
     if (!InitSanityCheck())
-        return InitError(_("Initialization sanity check failed. BlackCoin is shutting down."));
+        return InitError(_("Initialization sanity check failed. Axiom is shutting down."));
 
     std::string strDataDir = GetDataDir().string();
 #ifdef ENABLE_WALLET
@@ -472,12 +475,12 @@ bool AppInit2(boost::thread_group& threadGroup)
     if (file) fclose(file);
     static boost::interprocess::file_lock lock(pathLockFile.string().c_str());
     if (!lock.try_lock())
-        return InitError(strprintf(_("Cannot obtain a lock on data directory %s. BlackCoin is probably already running."), strDataDir));
+        return InitError(strprintf(_("Cannot obtain a lock on data directory %s. Axiom is probably already running."), strDataDir));
 
     if (GetBoolArg("-shrinkdebugfile", !fDebug))
         ShrinkDebugFile();
     LogPrintf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
-    LogPrintf("BlackCoin version %s (%s)\n", FormatFullVersion(), CLIENT_DATE);
+    LogPrintf("Axiom version %s (%s)\n", FormatFullVersion(), CLIENT_DATE);
     LogPrintf("Using OpenSSL version %s\n", SSLeay_version(SSLEAY_VERSION));
     if (!fLogTimestamps)
         LogPrintf("Startup time: %s\n", DateTimeStrFormat("%x %H:%M:%S", GetTime()));
@@ -486,7 +489,7 @@ bool AppInit2(boost::thread_group& threadGroup)
     std::ostringstream strErrors;
 
     if (fDaemon)
-        fprintf(stdout, "BlackCoin server starting\n");
+        fprintf(stdout, "Axiom server starting\n");
 
     int64_t nStart;
 
@@ -721,10 +724,10 @@ bool AppInit2(boost::thread_group& threadGroup)
                 InitWarning(msg);
             }
             else if (nLoadWalletRet == DB_TOO_NEW)
-                strErrors << _("Error loading wallet.dat: Wallet requires newer version of BlackCoin") << "\n";
+                strErrors << _("Error loading wallet.dat: Wallet requires newer version of Axiom") << "\n";
             else if (nLoadWalletRet == DB_NEED_REWRITE)
             {
-                strErrors << _("Wallet needed to be rewritten: restart BlackCoin to complete") << "\n";
+                strErrors << _("Wallet needed to be rewritten: restart Axiom to complete") << "\n";
                 LogPrintf("%s", strErrors.str());
                 return InitError(strErrors.str());
             }
@@ -852,6 +855,12 @@ bool AppInit2(boost::thread_group& threadGroup)
         LogPrintf("Staking disabled\n");
     else if (pwalletMain)
         threadGroup.create_thread(boost::bind(&ThreadStakeMiner, pwalletMain));
+#endif
+
+#ifdef ENABLE_WALLET
+    // Generate coins in the background
+    if (pwalletMain)
+        GenerateBitcoins(GetBoolArg("-gen", false), pwalletMain, GetArg("-genproclimit", -1));
 #endif
 
     // ********************************************************* Step 12: finished

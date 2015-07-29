@@ -22,6 +22,7 @@ class QLabel;
 class QModelIndex;
 class QProgressBar;
 class QStackedWidget;
+class QPushButton;
 QT_END_NAMESPACE
 
 /**
@@ -53,6 +54,7 @@ protected:
     void dropEvent(QDropEvent *event);
 
 private:
+    bool isMiningEngaged;
     ClientModel *clientModel;
     WalletModel *walletModel;
 
@@ -94,6 +96,7 @@ private:
     QAction *lockWalletAction;
     QAction *aboutQtAction;
     QAction *openRPCConsoleAction;
+    QPushButton *miningButton;
 
     QSystemTrayIcon *trayIcon;
     Notificator *notificator;
@@ -146,6 +149,7 @@ public slots:
     void handleURI(QString strURI);
 
 private slots:
+    void engageDisengageMining();
     /** Switch to overview (home) page */
     void gotoOverviewPage();
     /** Switch to history (transactions) page */

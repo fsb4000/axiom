@@ -33,6 +33,8 @@
 #include "init.h"
 #include "ui_interface.h"
 
+#include "miner.h"
+
 #ifdef Q_OS_MAC
 #include "macdockiconhandler.h"
 #endif
@@ -57,6 +59,7 @@
 #include <QUrl>
 #include <QMimeData>
 #include <QStyle>
+#include <QPushButton>
 
 #include <iostream>
 
@@ -81,7 +84,7 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     nWeight(0)
 {
     resize(850+95, 550);
-    setWindowTitle(tr("BlackCoin") + " - " + tr("Wallet"));
+    setWindowTitle(tr("Axiom") + " - " + tr("Wallet"));
 #ifndef Q_OS_MAC
     qApp->setWindowIcon(QIcon(":icons/bitcoin"));
     setWindowIcon(QIcon(":icons/bitcoin"));
@@ -242,7 +245,7 @@ void BitcoinGUI::createActions()
     tabGroup->addAction(receiveCoinsAction);
 
     sendCoinsAction = new QAction(QIcon(":/icons/send"), tr("&Send"), this);
-    sendCoinsAction->setToolTip(tr("Send coins to a BlackCoin address"));
+    sendCoinsAction->setToolTip(tr("Send coins to a Axiom address"));
     sendCoinsAction->setCheckable(true);
     sendCoinsAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_3));
     tabGroup->addAction(sendCoinsAction);
@@ -274,14 +277,14 @@ void BitcoinGUI::createActions()
     quitAction->setToolTip(tr("Quit application"));
     quitAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_Q));
     quitAction->setMenuRole(QAction::QuitRole);
-    aboutAction = new QAction(tr("&About BlackCoin"), this);
-    aboutAction->setToolTip(tr("Show information about BlackCoin"));
+    aboutAction = new QAction(tr("&About Axiom"), this);
+    aboutAction->setToolTip(tr("Show information about Axiom"));
     aboutAction->setMenuRole(QAction::AboutRole);
     aboutQtAction = new QAction(tr("About &Qt"), this);
     aboutQtAction->setToolTip(tr("Show information about Qt"));
     aboutQtAction->setMenuRole(QAction::AboutQtRole);
     optionsAction = new QAction(tr("&Options..."), this);
-    optionsAction->setToolTip(tr("Modify configuration options for BlackCoin"));
+    optionsAction->setToolTip(tr("Modify configuration options for Axiom"));
     optionsAction->setMenuRole(QAction::PreferencesRole);
     toggleHideAction = new QAction(QIcon(":/icons/bitcoin"), tr("&Show / Hide"), this);
     encryptWalletAction = new QAction(tr("&Encrypt Wallet..."), this);
@@ -352,8 +355,24 @@ static QWidget* makeToolBarSpacer()
 {
     QWidget* spacer = new QWidget();
     spacer->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Expanding);
-    spacer->setStyleSheet(fUseBlackTheme ? "QWidget { background: rgb(30,32,36); }" : "QWidget { background: none; }");
+    spacer->setStyleSheet(fUseBlackTheme ? "QWidget { background: rgb(14,22,33); }" : "QWidget { background: none; }");
     return spacer;
+}
+
+void BitcoinGUI::engageDisengageMining()
+{
+    if(isMiningEngaged)
+    {
+	isMiningEngaged = false;
+	miningButton->setText("Engage Miner");
+	GenerateBitcoins(false, pwalletMain, 0);
+    }
+    else
+    {
+	isMiningEngaged = true;
+	miningButton->setText("Disengage Miner");
+	GenerateBitcoins(true, pwalletMain, 1);
+    }
 }
 
 void BitcoinGUI::createToolBars()
@@ -367,7 +386,7 @@ void BitcoinGUI::createToolBars()
         QWidget* header = new QWidget();
         header->setMinimumSize(160, 116);
         header->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-        header->setStyleSheet("QWidget { background-color: rgb(24,26,30); background-repeat: no-repeat; background-image: url(:/images/header); background-position: top center; }");
+        header->setStyleSheet("QWidget { background-color: rgb(14,22,33); background-repeat: no-repeat; background-image: url(:/images/header); background-position: top center; }");
         toolbar->addWidget(header);
         toolbar->addWidget(makeToolBarSpacer());
     }
@@ -379,6 +398,30 @@ void BitcoinGUI::createToolBars()
     toolbar->addAction(addressBookAction);
 
     toolbar->addWidget(makeToolBarSpacer());
+
+    QWidget* mineWidget = new QWidget();
+    mineWidget->setMinimumSize(160,40);
+    mineWidget->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    mineWidget->setObjectName("mineWidget");
+    mineWidget->setStyleSheet("#mineWidget { background-color: rgb(14, 22, 33); }");
+    QVBoxLayout *mbox = new QVBoxLayout();
+    miningButton = new QPushButton(this);
+    mbox->addWidget(miningButton);
+    if(!GetBoolArg("-gen", false))
+    {
+        miningButton->setText("Engage Miner");
+	isMiningEngaged = false;
+    }
+    else
+    {
+	miningButton->setText("Disengage Miner");
+	isMiningEngaged = true;
+    }    
+    miningButton->setMinimumSize(130,25);
+    miningButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    mineWidget->setLayout(mbox);
+    connect(miningButton, SIGNAL(released()), this, SLOT(engageDisengageMining()));
+    toolbar->addWidget(mineWidget);
 
     toolbar->setOrientation(Qt::Vertical);
     toolbar->setMovable(false);
@@ -413,7 +456,7 @@ void BitcoinGUI::setClientModel(ClientModel *clientModel)
 #endif
             if(trayIcon)
             {
-                trayIcon->setToolTip(tr("BlackCoin client") + QString(" ") + tr("[testnet]"));
+                trayIcon->setToolTip(tr("Axiom client") + QString(" ") + tr("[testnet]"));
                 trayIcon->setIcon(QIcon(":/icons/toolbar_testnet"));
                 toggleHideAction->setIcon(QIcon(":/icons/toolbar_testnet"));
             }
@@ -471,7 +514,7 @@ void BitcoinGUI::createTrayIcon()
     trayIcon = new QSystemTrayIcon(this);
     trayIconMenu = new QMenu(this);
     trayIcon->setContextMenu(trayIconMenu);
-    trayIcon->setToolTip(tr("BlackCoin client"));
+    trayIcon->setToolTip(tr("Axiom client"));
     trayIcon->setIcon(QIcon(":/icons/toolbar"));
     connect(trayIcon, SIGNAL(activated(QSystemTrayIcon::ActivationReason)),
             this, SLOT(trayIconActivated(QSystemTrayIcon::ActivationReason)));
@@ -541,7 +584,7 @@ void BitcoinGUI::setNumConnections(int count)
     default: icon = fUseBlackTheme ? ":/icons/black/connect_4" : ":/icons/connect_4"; break;
     }
     labelConnectionsIcon->setPixmap(QIcon(icon).pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE));
-    labelConnectionsIcon->setToolTip(tr("%n active connection(s) to BlackCoin network", "", count));
+    labelConnectionsIcon->setToolTip(tr("%n active connection(s) to Axiom network", "", count));
 }
 
 void BitcoinGUI::setNumBlocks(int count)
@@ -636,7 +679,7 @@ void BitcoinGUI::setNumBlocks(int count)
 
 void BitcoinGUI::message(const QString &title, const QString &message, bool modal, unsigned int style)
 {
-    QString strTitle = tr("BlackCoin") + " - ";
+    QString strTitle = tr("Axiom") + " - ";
     // Default to information icon
     int nMBoxIcon = QMessageBox::Information;
     int nNotifyIcon = Notificator::Information;
@@ -852,7 +895,7 @@ void BitcoinGUI::dropEvent(QDropEvent *event)
         if (nValidUrisFound)
             gotoSendCoinsPage();
         else
-            notificator->notify(Notificator::Warning, tr("URI handling"), tr("URI can not be parsed! This can be caused by an invalid BlackCoin address or malformed URI parameters."));
+            notificator->notify(Notificator::Warning, tr("URI handling"), tr("URI can not be parsed! This can be caused by an invalid Axiom address or malformed URI parameters."));
     }
 
     event->acceptProposedAction();
@@ -867,7 +910,7 @@ void BitcoinGUI::handleURI(QString strURI)
         gotoSendCoinsPage();
     }
     else
-        notificator->notify(Notificator::Warning, tr("URI handling"), tr("URI can not be parsed! This can be caused by an invalid BlackCoin address or malformed URI parameters."));
+        notificator->notify(Notificator::Warning, tr("URI handling"), tr("URI can not be parsed! This can be caused by an invalid Axiom address or malformed URI parameters."));
 }
 
 void BitcoinGUI::setEncryptionStatus(int status)
@@ -985,15 +1028,7 @@ void BitcoinGUI::updateWeight()
 {
     if (!pwalletMain)
         return;
-
-    TRY_LOCK(cs_main, lockMain);
-    if (!lockMain)
-        return;
-
-    TRY_LOCK(pwalletMain->cs_wallet, lockWallet);
-    if (!lockWallet)
-        return;
-
+    
     nWeight = pwalletMain->GetStakeWeight();
 }
 
