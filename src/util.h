@@ -98,6 +98,8 @@ extern bool fNoListen;
 extern bool fLogTimestamps;
 extern volatile bool fReopenDebugLog;
 
+long hex2long(const char* hexString);
+
 void RandAddSeed();
 void RandAddSeedPerfmon();
 

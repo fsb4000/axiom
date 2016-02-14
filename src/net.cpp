@@ -978,7 +978,11 @@ void ThreadMapPort()
 #else
     /* miniupnpc 1.6 */
     int error = 0;
+#if MINIUPNPC_API_VERSION < 14
     devlist = upnpDiscover(2000, multicastif, minissdpdpath, 0, 0, &error);
+#else
+    devlist = upnpDiscover(2000, multicastif, minissdpdpath, 0, 0, 2, &error);
+#endif
 #endif
 
     struct UPNPUrls urls;

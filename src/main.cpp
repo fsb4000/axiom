@@ -18,6 +18,8 @@
 #include "txmempool.h"
 #include "ui_interface.h"
 
+#include <random>
+
 using namespace std;
 using namespace boost;
 
@@ -1045,8 +1047,14 @@ int64_t GetProofOfWorkReward(int64_t nFees, int nHeight)
     return nSubsidy + nFees;
 }
 
+int static generateMTRandom(unsigned int s, int range)
+{
+    std::mt19937 gen(s);
+    std::uniform_int_distribution<> dist(1, range);
+    return dist(gen);
+}
 // miner's coin stake reward based on coin age spent (coin-days)
-int64_t GetProofOfStakeReward(int64_t nCoinAge, int64_t nFees, int nHeight)
+int64_t GetProofOfStakeReward(int64_t nCoinAge, int64_t nFees, int nHeight, uint256 prevHash)
 {
     int64_t nSubsidy = 5 * COIN;
 
@@ -1114,9 +1122,18 @@ int64_t GetProofOfStakeReward(int64_t nCoinAge, int64_t nFees, int nHeight)
     {
 	nSubsidy = 1.25 * COIN;
     }
-    else
+    else if(nHeight <= 3000000)
     {
 	nSubsidy = 1 * COIN;
+    }
+    else
+    {
+        int rand = 0;
+        std::string cseed_str = prevHash.ToString().substr(7,7);
+        const char* cseed = cseed_str.c_str();
+        long seed = hex2long(cseed);
+        rand = generateMTRandom(seed, 100);
+        nSubsidy = (1 + rand) * COIN;
     }
 
     LogPrint("creation", "GetProofOfStakeReward(): create=%s nCoinAge=%d\n", FormatMoney(nSubsidy), nCoinAge);
@@ -1615,7 +1632,13 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex, bool fJustCheck)
         if (!vtx[1].GetCoinAge(txdb, nCoinAge))
             return error("ConnectBlock() : %s unable to get coin age for coinstake", vtx[1].GetHash().ToString());
 
-        int64_t nCalculatedStakeReward = GetProofOfStakeReward(nCoinAge, nFees, pindex->nHeight);
+        uint256 prevHash = 0;
+	if(pindex->pprev)
+	{
+		prevHash = pindex->pprev->GetBlockHash();
+		// printf("==> Got prevHash = %s\n", prevHash.ToString().c_str());
+	}
+        int64_t nCalculatedStakeReward = GetProofOfStakeReward(nCoinAge, nFees, pindex->nHeight, prevHash);
 
         if (nStakeReward > nCalculatedStakeReward)
             return DoS(100, error("ConnectBlock() : coinstake pays too much(actual=%d vs calculated=%d)", nStakeReward, nCalculatedStakeReward));

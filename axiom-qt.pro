@@ -14,6 +14,7 @@ DEFINES += USE_FIELD_10X26 USE_SCALAR_8X32
 
 CONFIG += no_include_pwd
 CONFIG += thread
+CONFIG += c++11
 
 greaterThan(QT_MAJOR_VERSION, 4) {
     QT += widgets
@@ -29,6 +30,21 @@ greaterThan(QT_MAJOR_VERSION, 4) {
 # Dependency library locations can be customized with:
 #    BOOST_INCLUDE_PATH, BOOST_LIB_PATH, BDB_INCLUDE_PATH,
 #    BDB_LIB_PATH, OPENSSL_INCLUDE_PATH and OPENSSL_LIB_PATH respectively
+
+win32 {
+        BOOST_LIB_SUFFIX=-mgw49-mt-s-1_60
+        BOOST_THREAD_LIB_SUFFIX=$$BOOST_LIB_SUFFIX
+        BOOST_INCLUDE_PATH=C:/MyProjects/Deps/boost_1_60_0
+        BOOST_LIB_PATH=C:/MyProjects/Deps/boost_1_60_0/stage/lib
+        BDB_INCLUDE_PATH=C:/MyProjects/Deps/db-4.8.30.NC/build_unix
+        BDB_LIB_PATH=C:/MyProjects/Deps/db-4.8.30.NC/build_unix
+        OPENSSL_INCLUDE_PATH=C:/MyProjects/Deps/openssl-1.0.2e/include
+        OPENSSL_LIB_PATH=C:/MyProjects/Deps/openssl-1.0.2e
+        MINIUPNPC_INCLUDE_PATH=C:/MyProjects/Deps
+        MINIUPNPC_LIB_PATH=C:/MyProjects/Deps/miniupnpc
+        QRENCODE_INCLUDE_PATH=C:/MyProjects/Deps/qrencode-3.4.4
+        QRENCODE_LIB_PATH=C:/MyProjects/Deps/qrencode-3.4.4/.libs
+}
 
 OBJECTS_DIR = build
 MOC_DIR = build
@@ -54,14 +70,16 @@ QMAKE_LFLAGS *= -fstack-protector-all --param ssp-buffer-size=1
 }
 # for extra security on Windows: enable ASLR and DEP via GCC linker flags
 win32:QMAKE_LFLAGS *= -Wl,--dynamicbase -Wl,--nxcompat
-win32:QMAKE_LFLAGS += -static-libgcc -static-libstdc++
 
 # use: qmake "USE_QRCODE=1"
 # libqrencode (http://fukuchi.org/works/qrencode/index.en.html) must be installed for support
-contains(USE_QRCODE, 1) {
+contains(USE_QRCODE, -) {
+    message(Building without QRCode support)
+}else {
     message(Building with QRCode support)
     DEFINES += USE_QRCODE
     LIBS += -lqrencode
+    USE_QRCODE=1
 }
 
 # use: qmake "USE_UPNP=1" ( enabled by default; default)
@@ -75,7 +93,7 @@ contains(USE_UPNP, -) {
     count(USE_UPNP, 0) {
         USE_UPNP=1
     }
-    DEFINES += USE_UPNP=$$USE_UPNP STATICLIB
+    DEFINES += USE_UPNP=$$USE_UPNP STATICLIB MINIUPNP_STATICLIB
     INCLUDEPATH += $$MINIUPNPC_INCLUDE_PATH
     LIBS += $$join(MINIUPNPC_LIB_PATH,,-L,) -lminiupnpc
     win32:LIBS += -liphlpapi
@@ -463,7 +481,7 @@ LIBS += -lssl -lcrypto -ldb_cxx$$BDB_LIB_SUFFIX
 # -lgdi32 has to happen after -lcrypto (see  #681)
 windows:LIBS += -lws2_32 -lshlwapi -lmswsock -lole32 -loleaut32 -luuid -lgdi32
 LIBS += -lboost_system$$BOOST_LIB_SUFFIX -lboost_filesystem$$BOOST_LIB_SUFFIX -lboost_program_options$$BOOST_LIB_SUFFIX -lboost_thread$$BOOST_THREAD_LIB_SUFFIX
-windows:LIBS += -lboost_chrono$$BOOST_LIB_SUFFIX
+windows:LIBS += -lboost_chrono$$BOOST_LIB_SUFFIX -Wl, -Bstatic -lpthread -Wl,-Bdynamic
 
 contains(RELEASE, 1) {
     !windows:!macx {

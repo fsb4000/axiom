@@ -113,7 +113,7 @@ Value getstakesubsidy(const Array& params, bool fHelp)
 
     throw runtime_error("not supported\n");
 
-    return (uint64_t)GetProofOfStakeReward(nCoinAge, 0, pindexBest->nHeight + 1);
+    return (uint64_t)GetProofOfStakeReward(nCoinAge, 0, pindexBest->nHeight + 1, pindexBest->GetBlockHash());
 }
 
 Value getmininginfo(const Array& params, bool fHelp)
