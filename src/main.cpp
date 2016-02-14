@@ -1058,75 +1058,7 @@ int64_t GetProofOfStakeReward(int64_t nCoinAge, int64_t nFees, int nHeight, uint
 {
     int64_t nSubsidy = 5 * COIN;
 
-    if(nHeight <= 800)
-    {
-	nSubsidy = 200 * COIN;
-    }
-    else if(nHeight <= 1440)
-    {
-	nSubsidy = 200 * COIN;
-    }
-    else if(nHeight <= 5040)
-    {
-	nSubsidy = 100 * COIN;
-    }
-    else if(nHeight <= 9360)
-    {
-	nSubsidy = 75 * COIN;
-    }
-    else if(nHeight <= 13680)
-    {
-	nSubsidy = 60 * COIN;
-    }
-    else if(nHeight <= 18000)
-    {
-	nSubsidy = 50 * COIN;
-    }
-    else if(nHeight <= 156240)
-    {
-	nSubsidy = 5 * COIN;
-    }
-    else if(nHeight <= 160560)
-    {
-	nSubsidy = 80 * COIN;
-    }
-    else if(nHeight <= 164880)
-    {
-	nSubsidy = 200 * COIN;
-    }
-    else if(nHeight <= 169200)
-    {
-	nSubsidy = 110 * COIN;
-    }
-    else if(nHeight <= 173520)
-    {
-	nSubsidy = 60 * COIN;
-    }
-    else if(nHeight <= 177840)
-    {
-	nSubsidy = 40 * COIN;
-    }
-    else if(nHeight <= 182160)
-    {
-	nSubsidy = 20 * COIN;
-    }
-    else if(nHeight <= 707760)
-    {
-	nSubsidy = 5 * COIN;
-    }
-    else if(nHeight <= 1233360)
-    {
-	nSubsidy = 2.5 * COIN;
-    }
-    else if(nHeight <= 1758960)
-    {
-	nSubsidy = 1.25 * COIN;
-    }
-    else if(nHeight <= 3000000)
-    {
-	nSubsidy = 1 * COIN;
-    }
-    else
+    if(TestNet())
     {
         int rand = 0;
         std::string cseed_str = prevHash.ToString().substr(7,7);
@@ -1135,7 +1067,86 @@ int64_t GetProofOfStakeReward(int64_t nCoinAge, int64_t nFees, int nHeight, uint
         rand = generateMTRandom(seed, 100);
         nSubsidy = (1 + rand) * COIN;
     }
-
+    else
+    {
+        if(nHeight <= 800)
+        {
+            nSubsidy = 200 * COIN;
+        }
+        else if(nHeight <= 1440)
+        {
+            nSubsidy = 200 * COIN;
+        }
+        else if(nHeight <= 5040)
+        {
+	    nSubsidy = 100 * COIN;
+        }
+        else if(nHeight <= 9360)
+        {
+	    nSubsidy = 75 * COIN;
+        }
+        else if(nHeight <= 13680)
+        {
+            nSubsidy = 60 * COIN;
+        }
+        else if(nHeight <= 18000)
+        {
+            nSubsidy = 50 * COIN;
+        }
+        else if(nHeight <= 156240)
+        {
+            nSubsidy = 5 * COIN;
+        }
+        else if(nHeight <= 160560)
+        {
+            nSubsidy = 80 * COIN;
+        }
+        else if(nHeight <= 164880)
+        {
+	    nSubsidy = 200 * COIN;
+        }
+        else if(nHeight <= 169200)
+        {
+            nSubsidy = 110 * COIN;
+        }
+        else if(nHeight <= 173520)
+        {
+            nSubsidy = 60 * COIN;
+        }
+        else if(nHeight <= 177840)
+        {
+            nSubsidy = 40 * COIN;
+        }
+        else if(nHeight <= 182160)
+        {
+            nSubsidy = 20 * COIN;
+        }
+        else if(nHeight <= 707760)
+        {
+            nSubsidy = 5 * COIN;
+        }
+        else if(nHeight <= 1233360)
+        {
+            nSubsidy = 2.5 * COIN;
+        }
+        else if(nHeight <= 1758960)
+        {
+            nSubsidy = 1.25 * COIN;
+        }
+        else if(nHeight <= 3000000)
+        {
+	    nSubsidy = 1 * COIN;
+        }
+        else
+        {
+            int rand = 0;
+            std::string cseed_str = prevHash.ToString().substr(7,7);
+            const char* cseed = cseed_str.c_str();
+            long seed = hex2long(cseed);
+            rand = generateMTRandom(seed, 100);
+            nSubsidy = (1 + rand) * COIN;
+        }
+    }
     LogPrint("creation", "GetProofOfStakeReward(): create=%s nCoinAge=%d\n", FormatMoney(nSubsidy), nCoinAge);
 
     return nSubsidy + nFees;
@@ -1633,11 +1644,11 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex, bool fJustCheck)
             return error("ConnectBlock() : %s unable to get coin age for coinstake", vtx[1].GetHash().ToString());
 
         uint256 prevHash = 0;
-	if(pindex->pprev)
-	{
-		prevHash = pindex->pprev->GetBlockHash();
-		// printf("==> Got prevHash = %s\n", prevHash.ToString().c_str());
-	}
+        if(pindex->pprev)
+        {
+                prevHash = pindex->pprev->GetBlockHash();
+                // printf("==> Got prevHash = %s\n", prevHash.ToString().c_str());
+        }
         int64_t nCalculatedStakeReward = GetProofOfStakeReward(nCoinAge, nFees, pindex->nHeight, prevHash);
 
         if (nStakeReward > nCalculatedStakeReward)
